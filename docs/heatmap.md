@@ -1,7 +1,5 @@
 # `<Heatmap />` Component API
 
-**Note**: Supported on Google Maps only.
-
 ## Props
 
 | Prop | Type | Default | Note |

@@ -91,7 +91,6 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   private boolean handlePanDrag = false;
   private boolean moveOnMarkerPress = true;
   private boolean cacheEnabled = false;
-  private ReadableMap initialRegion;
   private boolean initialRegionSet = false;
   private boolean initialCameraSet = false;
   private LatLngBounds cameraLastIdleBounds;
@@ -219,10 +218,6 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     this.map.setOnMarkerDragListener(this);
     this.map.setOnPoiClickListener(this);
     this.map.setOnIndoorStateChangeListener(this);
-    if(initialRegion != null) {
-      setRegion(initialRegion);
-      initialRegionSet = true;
-    }
 
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
 
@@ -400,7 +395,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     lifecycleListener = new LifecycleEventListener() {
       @Override
       public void onHostResume() {
-        if (hasPermissions() && map != null) {
+        if (hasPermissions()) {
           //noinspection MissingPermission
           map.setMyLocationEnabled(showUserLocation);
           map.setLocationSource(fusedLocationSource);
@@ -415,7 +410,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
 
       @Override
       public void onHostPause() {
-        if (hasPermissions() && map != null) {
+        if (hasPermissions()) {
           //noinspection MissingPermission
           map.setMyLocationEnabled(false);
         }
@@ -463,10 +458,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   }
 
   public void setInitialRegion(ReadableMap initialRegion) {
-    this.initialRegion = initialRegion;
-    // Theoretically onMapReady might be called before setInitialRegion
-    // In that case, trigger setRegion manually
-    if (!initialRegionSet && map != null) {
+    if (!initialRegionSet && initialRegion != null) {
       setRegion(initialRegion);
       initialRegionSet = true;
     }
@@ -1019,9 +1011,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
 
     int X = (int)ev.getX();          
     int Y = (int)ev.getY();
-    if(map != null) {
-      tapLocation = map.getProjection().fromScreenLocation(new Point(X,Y));
-    }
+    tapLocation = map.getProjection().fromScreenLocation(new Point(X,Y));
 
     int action = MotionEventCompat.getActionMasked(ev);
 
