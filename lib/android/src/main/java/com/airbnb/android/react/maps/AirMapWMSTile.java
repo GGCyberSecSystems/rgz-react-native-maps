@@ -9,6 +9,11 @@ import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.UrlTileProvider;
 
+import org.osgeo.proj4j.BasicCoordinateTransform;
+import org.osgeo.proj4j.CRSFactory;
+import org.osgeo.proj4j.CoordinateReferenceSystem;
+import org.osgeo.proj4j.ProjCoordinate;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -38,15 +43,31 @@ public class AirMapWMSTile extends AirMapUrlTile {
           return null;
       }
 
+      CRSFactory factory = new CRSFactory();
+      CoordinateReferenceSystem srcCrs = factory.createFromName("EPSG:3857");
+      CoordinateReferenceSystem dstCrs = factory.createFromName("EPSG:32634");
+
+      BasicCoordinateTransform transform = new BasicCoordinateTransform(srcCrs, dstCrs);
+
       double[] bb = getBoundingBox(x, y, zoom);
+
+      ProjCoordinate srcCoordMIN = new ProjCoordinate(bb[0], bb[1]);
+      ProjCoordinate dstCoorMin = new ProjCoordinate();
+      transform.transform(srcCoordMIN, dstCoorMin);
+
+      ProjCoordinate srcCoordMax = new ProjCoordinate(bb[2], bb[3]);
+      ProjCoordinate dstCoorMax = new ProjCoordinate();
+      transform.transform(srcCoordMax, dstCoorMax);
+
       String s = this.urlTemplate
-          .replace("{minX}", Double.toString(bb[0]))
-          .replace("{minY}", Double.toString(bb[1]))
-          .replace("{maxX}", Double.toString(bb[2]))
-          .replace("{maxY}", Double.toString(bb[3]))
+          .replace("{minX}", Double.toString(dstCoorMin.x))
+          .replace("{minY}", Double.toString(dstCoorMin.y))
+          .replace("{maxX}", Double.toString(dstCoorMax.x))
+          .replace("{maxY}", Double.toString(dstCoorMax.y))
           .replace("{width}", Integer.toString(this.tileSize))
           .replace("{height}", Integer.toString(this.tileSize));
       URL url = null;
+      Log.i("MAPA", s);
 
       try {
         url = new URL(s);
